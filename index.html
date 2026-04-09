@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Woordzoeker Frans</title>
+  <style>
+    :root {
+      --bg1: #fff8ef;
+      --bg2: #eef8ff;
+      --card: rgba(255,255,255,0.94);
+      --text: #22304a;
+      --muted: #5f6b84;
+      --accent: #ff8a5b;
+      --accent-2: #6ec5ff;
+      --good: #64c27b;
+      --good-dark: #2f8d4a;
+      --bad: #ff6b6b;
+      --line: #dbe5f0;
+      --shadow: 0 14px 35px rgba(34, 48, 74, 0.12);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, #fff2cf 0%, transparent 30%),
+        radial-gradient(circle at top right, #dff4ff 0%, transparent 28%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(255,255,255,0.94), rgba(255,255,255,0.86));
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 24px 24px 18px;
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      right: -40px;
+      top: -40px;
+      border-radius: 50%;
+      background: rgba(110, 197, 255, 0.18);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      max-width: 900px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 760px) minmax(280px, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      backdrop-filter: blur(6px);
+    }
+
+    .card h2, .side h3 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    .hint {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .statuspill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #f5f9ff;
+      border: 1px solid #dce9f6;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .buttonrow {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 11px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, opacity .2s ease;
+      box-shadow: 0 8px 18px rgba(34,48,74,0.12);
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(1px); }
+
+    .ghost {
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+
+    .gridwrap {
+      width: 100%;
+      overflow: auto;
+      padding-bottom: 6px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 4px;
+      user-select: none;
+      touch-action: none;
+      margin: 8px auto 0;
+      width: fit-content;
+      background: #f7fbff;
+      border: 1px solid #dce7f3;
+      padding: 10px;
+      border-radius: 18px;
+    }
+
+    .cell {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      background: white;
+      border: 1px solid #dbe6f2;
+      transition: background-color .15s ease, transform .08s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+      box-shadow: inset 0 0 0 0 rgba(255, 190, 115, 0);
+      padding: 0;
+    }
+
+    .cell:hover {
+      border-color: #9bcfff;
+      box-shadow: 0 0 0 3px rgba(110,197,255,0.14);
+    }
+
+    .cell.start {
+      background: #fff3de;
+      border-color: #ffb75c;
+      box-shadow: 0 0 0 4px rgba(255,183,92,0.22);
+    }
+
+    .cell.active {
+      background: #ffe8c7;
+      border-color: #ffbe73;
+      transform: scale(1.05);
+      box-shadow: 0 0 0 4px rgba(255,190,115,0.22);
+    }
+
+    .cell.trail {
+      background: #fff0d8;
+      border-color: #ffc67a;
+      box-shadow: 0 0 0 3px rgba(255,198,122,0.18);
+    }
+
+    .cell.found {
+      background: linear-gradient(135deg, #7ee49a, #57c174);
+      border-color: var(--good-dark);
+      color: white;
+    }
+
+    .cell.flash-bad {
+      background: #ffd9d9;
+      border-color: #ff9c9c;
+      color: #973737;
+    }
+
+    .selection-preview {
+      margin-top: 14px;
+      min-height: 48px;
+      border-radius: 14px;
+      border: 1px dashed #c9d8e8;
+      background: #fbfdff;
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .progress {
+      margin-top: 16px;
+      background: #e8f0f8;
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #ffd36d, #7ee49a);
+      transition: width .3s ease;
+    }
+
+    .translationlist {
+      display: grid;
+      gap: 10px;
+      max-height: 78vh;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .translation-item {
+      border: 1px solid #dce7f2;
+      background: #fcfeff;
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .translation-label {
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .translation-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      border: 2px solid #cfdceb;
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+      background: white;
+    }
+
+    input[type="text"].correct {
+      border-color: #72cf8a;
+      background: #f1fff4;
+    }
+
+    input[type="text"].wrong {
+      border-color: #ff8e8e;
+      background: #fff1f1;
+    }
+
+    input[type="text"]:focus {
+      border-color: #80c9ff;
+      box-shadow: 0 0 0 4px rgba(110,197,255,0.16);
+    }
+
+    .check-btn {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f2f7fc;
+      color: var(--text);
+      box-shadow: none;
+      border: 1px solid #d5e2ef;
+    }
+
+    .feedback {
+      margin-top: 8px;
+      min-height: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .smiley {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 30px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eefdf2;
+      border: 1px solid #bde7c7;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .feedback.good { color: var(--good-dark); }
+    .feedback.bad { color: #c74747; }
+
+    .final-box {
+      margin-top: 18px;
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(135deg, #f6fff0, #eff9ff);
+      border: 1px solid #d6ebd2;
+      display: none;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .final-box.show { display: block; }
+
+    .celebration {
+      font-size: 34px;
+      font-weight: 900;
+      color: #ff7c39;
+      letter-spacing: 0.5px;
+    }
+
+    .confetti-layer {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 50;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -30px;
+      width: 12px;
+      height: 20px;
+      border-radius: 4px;
+      opacity: 0.95;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% { transform: translateY(-40px) rotate(0deg); }
+      100% { transform: translateY(115vh) rotate(720deg); }
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(34,48,74,0.94);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 999px;
+      box-shadow: 0 14px 35px rgba(0,0,0,0.22);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+      z-index: 60;
+      font-weight: 700;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    
+
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .translationlist { max-height: none; }
+    }
+
+    @media (max-width: 640px) {
+      .page { padding: 14px; }
+      .card, .hero { padding: 16px; }
+      .cell {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+        border-radius: 8px;
+      }
+      .translation-row { flex-direction: column; align-items: stretch; }
+      .check-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>Woordzoeker Frans 🇫🇷</h1>
+      <p class="subtitle">
+        Zoek de Franse woorden in de puzzel. Klik of sleep van letter naar letter om een woord te selecteren.
+        Goed gevonden? Dan blijven de letters groen staan. Fout geprobeerd? Dan verdwijnt de selectie weer.
+        Vul daarna de Nederlandse betekenissen in het Frans in.
+      </p>
+    </section>
+
+    <div class="layout">
+      <section class="card main">
+        <div class="topbar">
+          <div class="statuspill">✅ Gevonden woorden: <span id="foundCount">0</span> / <span id="totalCount">0</span></div>
+          <div class="buttonrow">
+            <button id="resetBtn" class="ghost" type="button">Opnieuw starten</button>
+          </div>
+        </div>
+
+        <h2>Zoek de woorden</h2>
+        <p class="hint">Woorden kunnen horizontaal, verticaal en diagonaal staan — vooruit of achteruit.</p>
+
+        <div class="gridwrap">
+          <div id="grid" class="grid" aria-label="woordzoeker"></div>
+        </div>
+
+        <div id="selectionPreview" class="selection-preview">Klik op de eerste letter en sleep daarna in één rechte lijn naar de laatste letter.</div>
+
+        <div class="progress" aria-hidden="true">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+
+        <div id="finalBox" class="final-box">
+          <div class="celebration">bien fait! 🎉</div>
+        </div>
+
+        
+        </div>
+      </section>
+
+      <aside class="card side">
+        <h3>Vertalen</h3>
+        <p class="hint">Hieronder staan alleen de Nederlandse woorden. Vul in het vakje erachter het Franse woord in.</p>
+        <div id="translationList" class="translationlist"></div>
+      </aside>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const words = [
+      { fr: "GAGNER", nl: "winnen" },
+      { fr: "ENDROIT", nl: "plek" },
+      { fr: "BONSOIR", nl: "goedenavond" },
+      { fr: "DOMMAGE", nl: "jammer" },
+      { fr: "MAISON", nl: "huis" },
+      { fr: "LIT", nl: "bed" },
+      { fr: "CHAMBRE", nl: "slaapkamer" },
+      { fr: "ORDINATEUR", nl: "computer" },
+      { fr: "MALADE", nl: "ziek" },
+      { fr: "FIEVRE", nl: "koorts", accept: ["FIEVRE", "FIEVRE", "FIÈVRE"] },
+      { fr: "MIEUX", nl: "beter" },
+      { fr: "RESTER", nl: "blijven" },
+      { fr: "ENTRER", nl: "binnenkomen" },
+      { fr: "TOUJOURS", nl: "altijd" },
+      { fr: "ACCRO", nl: "verslaafd" },
+      { fr: "CHOSE", nl: "ding" },
+      { fr: "ACCIDENT", nl: "ongeluk" },
+      { fr: "SANS", nl: "zonder" },
+      { fr: "CAR", nl: "want" },
+      { fr: "AMELIORER", nl: "verbeteren", accept: ["AMELIORER", "AMÉLIORER"] },
+      { fr: "GORGE", nl: "keel" },
+      { fr: "VENTRE", nl: "buik" },
+      { fr: "BRAS", nl: "arm" },
+      { fr: "DOS", nl: "rug" },
+      { fr: "MAIN", nl: "hand" },
+      { fr: "JAMBE", nl: "been" },
+      { fr: "PIED", nl: "voet" },
+      { fr: "SI", nl: "als" },
+      { fr: "BISOU", nl: "kus" }
+    ];
+
+    const gridSize = 16;
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const directions = [
+      [1, 0], [-1, 0], [0, 1], [0, -1],
+      [1, 1], [-1, -1], [1, -1], [-1, 1]
+    ];
+    const confettiColors = ["#ff7c39", "#ffd84d", "#6ec5ff", "#7ee49a", "#c08cff", "#ff6fa8"];
+
+    const state = {
+      grid: [],
+      placedWords: [],
+      foundWords: new Set(),
+      selectedCells: [],
+      pointerDown: false,
+      translationCorrect: new Set(),
+      celebrationShown: false
+    };
+
+    const gridEl = document.getElementById("grid");
+    const translationListEl = document.getElementById("translationList");
+    const foundCountEl = document.getElementById("foundCount");
+    const totalCountEl = document.getElementById("totalCount");
+    const progressFillEl = document.getElementById("progressFill");
+    const selectionPreviewEl = document.getElementById("selectionPreview");
+    const finalBoxEl = document.getElementById("finalBox");
+    const toastEl = document.getElementById("toast");
+    const resetBtn = document.getElementById("resetBtn");
+    
+    function normalizeText(text) {
+      return (text || "")
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^A-Z]/g, "");
+    }
+
+    function randomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function getCellEl(row, col) {
+      return gridEl.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+    }
+
+    function buildEmptyGrid() {
+      state.grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(""));
+      state.placedWords = [];
+      state.foundWords = new Set();
+      state.selectedCells = [];
+      state.translationCorrect = new Set();
+      state.pointerDown = false;
+      state.celebrationShown = false;
+      finalBoxEl.classList.remove("show");
+      foundCountEl.textContent = "0";
+      progressFillEl.style.width = "0%";
+    }
+
+    function canPlaceWord(word, row, col, dx, dy) {
+      for (let i = 0; i < word.length; i++) {
+        const r = row + dy * i;
+        const c = col + dx * i;
+        if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) return false;
+        const existing = state.grid[r][c];
+        if (existing && existing !== word[i]) return false;
+      }
+      return true;
+    }
+
+    function placeWord(wordObj) {
+      const dirs = shuffle(directions);
+      for (const [dx, dy] of dirs) {
+        const rows = shuffle([...Array(gridSize).keys()]);
+        const cols = shuffle([...Array(gridSize).keys()]);
+        for (const row of rows) {
+          for (const col of cols) {
+            if (!canPlaceWord(wordObj.fr, row, col, dx, dy)) continue;
+            const cells = [];
+            for (let i = 0; i < wordObj.fr.length; i++) {
+              const r = row + dy * i;
+              const c = col + dx * i;
+              state.grid[r][c] = wordObj.fr[i];
+              cells.push({ row: r, col: c });
+            }
+            state.placedWords.push({ word: wordObj.fr, cells, wordObj });
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    function fillRandomLetters() {
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          if (!state.grid[r][c]) {
+            state.grid[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)];
+          }
+        }
+      }
+    }
+
+    function generatePuzzle() {
+      let attempts = 0;
+      while (attempts < 150) {
+        buildEmptyGrid();
+        const shuffledWords = shuffle(words);
+        let ok = true;
+        for (const wordObj of shuffledWords) {
+          if (!placeWord(wordObj)) {
+            ok = false;
+            break;
+          }
+        }
+        if (ok) {
+          fillRandomLetters();
+          return;
+        }
+        attempts += 1;
+      }
+      throw new Error("De woordzoeker kon niet opgebouwd worden.");
+    }
+
+    function renderGrid() {
+      gridEl.innerHTML = "";
+      gridEl.style.gridTemplateColumns = `repeat(${gridSize}, 34px)`;
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          const cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "cell";
+          cell.textContent = state.grid[r][c];
+          cell.dataset.row = String(r);
+          cell.dataset.col = String(c);
+          cell.setAttribute("aria-label", `letter ${state.grid[r][c]}`);
+          cell.addEventListener("pointerdown", onPointerDown);
+          cell.addEventListener("pointerenter", onPointerEnter);
+          cell.addEventListener("pointerup", onPointerUp);
+          gridEl.appendChild(cell);
+        }
+      }
+    }
+
+    function renderTranslations() {
+      translationListEl.innerHTML = "";
+      words.forEach(({ fr, nl }) => {
+        const wrap = document.createElement("div");
+        wrap.className = "translation-item";
+        wrap.id = `translation-${fr}`;
+        wrap.innerHTML = `
+          <div class="translation-label">${nl}</div>
+          <div class="translation-row">
+            <input type="text" data-answer="${fr}" placeholder="Typ het Franse woord" autocomplete="off" spellcheck="false" />
+            <button type="button" class="check-btn" data-answer="${fr}">Check</button>
+          </div>
+          <div class="feedback" id="feedback-${fr}"></div>
+        `;
+        translationListEl.appendChild(wrap);
+      });
+
+      translationListEl.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") checkTranslation(input.dataset.answer);
+        });
+      });
+
+      translationListEl.querySelectorAll(".check-btn").forEach((btn) => {
+        btn.addEventListener("click", () => checkTranslation(btn.dataset.answer));
+      });
+    }
+
+    function clearActiveSelection() {
+      state.selectedCells.forEach(({ row, col }) => {
+        const cell = getCellEl(row, col);
+        if (cell && !cell.classList.contains("found")) {
+          cell.classList.remove("active", "flash-bad", "trail", "start");
+        }
+      });
+      state.selectedCells = [];
+      selectionPreviewEl.textContent = "Klik op de eerste letter en sleep daarna in één rechte lijn naar de laatste letter.";
+    }
+
+    function addCellToSelection(row, col) {
+      const exists = state.selectedCells.some((cell) => cell.row === row && cell.col === col);
+      if (exists) return;
+
+      const cell = getCellEl(row, col);
+      if (!cell || cell.classList.contains("found")) return;
+
+      if (state.selectedCells.length === 0) {
+        state.selectedCells.push({ row, col });
+        cell.classList.add("start", "active");
+        selectionPreviewEl.textContent = state.grid[row][col];
+        return;
+      }
+
+      const first = state.selectedCells[0];
+      const deltaRow = row - first.row;
+      const deltaCol = col - first.col;
+      const straight = deltaRow === 0 || deltaCol === 0 || Math.abs(deltaRow) === Math.abs(deltaCol);
+      if (!straight) return;
+
+      const stepRow = deltaRow === 0 ? 0 : deltaRow / Math.abs(deltaRow);
+      const stepCol = deltaCol === 0 ? 0 : deltaCol / Math.abs(deltaCol);
+      const distance = Math.max(Math.abs(deltaRow), Math.abs(deltaCol));
+      const newCells = [];
+
+      for (let i = 0; i <= distance; i++) {
+        const nextRow = first.row + stepRow * i;
+        const nextCol = first.col + stepCol * i;
+        const nextCell = getCellEl(nextRow, nextCol);
+        if (!nextCell || nextCell.classList.contains("found")) return;
+        newCells.push({ row: nextRow, col: nextCol });
+      }
+
+      state.selectedCells.forEach(({ row, col }) => {
+        const currentCell = getCellEl(row, col);
+        if (currentCell && !currentCell.classList.contains("found")) {
+          currentCell.classList.remove("active", "trail", "start");
+        }
+      });
+
+      state.selectedCells = newCells;
+      state.selectedCells.forEach(({ row, col }, index) => {
+        const currentCell = getCellEl(row, col);
+        if (!currentCell) return;
+        if (index === 0) currentCell.classList.add("start");
+        currentCell.classList.add(index === state.selectedCells.length - 1 ? "active" : "trail");
+      });
+
+      selectionPreviewEl.textContent = state.selectedCells.map(({ row, col: currentCol }) => state.grid[row][currentCol]).join("");
+    }
+
+    function onPointerDown(e) {
+      e.preventDefault();
+      state.pointerDown = true;
+      clearActiveSelection();
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+      addCellToSelection(Number(e.currentTarget.dataset.row), Number(e.currentTarget.dataset.col));
+    }
+
+    function onPointerEnter(e) {
+      if (!state.pointerDown) return;
+      addCellToSelection(Number(e.currentTarget.dataset.row), Number(e.currentTarget.dataset.col));
+    }
+
+    function onPointerUp() {
+      if (!state.pointerDown) return;
+      state.pointerDown = false;
+      evaluateSelection();
+    }
+
+    function sameCells(a, b) {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i].row !== b[i].row || a[i].col !== b[i].col) return false;
+      }
+      return true;
+    }
+
+    function evaluateSelection() {
+      if (!state.selectedCells.length) return;
+
+      const match = state.placedWords.find((item) => {
+        const forward = sameCells(state.selectedCells, item.cells);
+        const backward = sameCells(state.selectedCells, [...item.cells].reverse());
+        return forward || backward;
+      });
+
+      if (match && !state.foundWords.has(match.word)) {
+        state.foundWords.add(match.word);
+        match.cells.forEach(({ row, col }) => {
+          const cell = getCellEl(row, col);
+          if (cell) {
+            cell.classList.remove("active", "flash-bad", "trail", "start");
+            cell.classList.add("found");
+          }
+        });
+        showToast(`Goed gevonden: ${match.word.toLowerCase()} 🎉`);
+        updateProgress();
+        clearActiveSelection();
+        return;
+      }
+
+      state.selectedCells.forEach(({ row, col }) => {
+        const cell = getCellEl(row, col);
+        if (cell) cell.classList.add("flash-bad");
+      });
+      showToast("Nog niet goed. Probeer opnieuw 🙂");
+      setTimeout(() => clearActiveSelection(), 350);
+    }
+
+    function showToast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toastEl.classList.remove("show"), 1700);
+    }
+
+    function launchConfetti() {
+      const oldLayer = document.querySelector(".confetti-layer");
+      if (oldLayer) oldLayer.remove();
+
+      const layer = document.createElement("div");
+      layer.className = "confetti-layer";
+
+      for (let i = 0; i < 90; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti-piece";
+        piece.style.left = `${Math.random() * 100}vw`;
+        piece.style.background = randomItem(confettiColors);
+        piece.style.animationDuration = `${2.2 + Math.random() * 1.8}s`;
+        piece.style.animationDelay = `${Math.random() * 0.25}s`;
+        piece.style.transform = `translateY(-40px) rotate(${Math.random() * 360}deg)`;
+        layer.appendChild(piece);
+      }
+
+      document.body.appendChild(layer);
+      setTimeout(() => layer.remove(), 4500);
+    }
+
+    function updateProgress() {
+      foundCountEl.textContent = String(state.foundWords.size);
+      const percent = (state.foundWords.size / words.length) * 100;
+      progressFillEl.style.width = `${percent}%`;
+
+      const allFound = state.foundWords.size === words.length;
+      const allTranslated = state.translationCorrect.size === words.length;
+
+      if (allFound && allTranslated && !state.celebrationShown) {
+        state.celebrationShown = true;
+        finalBoxEl.classList.add("show");
+        launchConfetti();
+      }
+    }
+
+    function checkTranslation(fr) {
+      const input = translationListEl.querySelector(`input[data-answer="${fr}"]`);
+      const feedback = document.getElementById(`feedback-${fr}`);
+      const item = document.getElementById(`translation-${fr}`);
+      const wordObj = words.find((w) => w.fr === fr);
+      const accepted = (wordObj.accept || [wordObj.fr]).map(normalizeText);
+      const answer = normalizeText(input.value);
+      const smileys = ["😄", "😊", "🥳", "😁", "🤩", "🎉"];
+
+      input.classList.remove("correct", "wrong");
+
+      if (accepted.includes(answer)) {
+        feedback.innerHTML = `<span>Goed!</span><span class="smiley">${randomItem(smileys)}</span>`;
+        feedback.className = "feedback good";
+        input.classList.add("correct");
+        input.disabled = true;
+        item.style.borderColor = "#99dcaa";
+        item.style.background = "#eefbf1";
+        state.translationCorrect.add(fr);
+        showToast(`Goed vertaald: ${wordObj.nl} ✅`);
+      } else {
+        feedback.textContent = "Nog niet goed.";
+        feedback.className = "feedback bad";
+        input.classList.add("wrong");
+        item.style.borderColor = "#f0c7c7";
+        item.style.background = "#fff8f8";
+      }
+
+      updateProgress();
+    }
+
+    function resetGame() {
+      generatePuzzle();
+      renderGrid();
+      renderTranslations();
+      totalCountEl.textContent = String(words.length);
+      selectionPreviewEl.textContent = "Klik op de eerste letter en sleep daarna in één rechte lijn naar de laatste letter.";
+      const oldLayer = document.querySelector(".confetti-layer");
+      if (oldLayer) oldLayer.remove();
+      showToast("Nieuwe woordzoeker gestart! ✨");
+      updateProgress();
+      
+    }
+
+    
+
+    window.addEventListener("pointerup", () => {
+      if (state.pointerDown) {
+        state.pointerDown = false;
+        evaluateSelection();
+      }
+    });
+
+    gridEl.addEventListener("pointermove", (e) => {
+      if (!state.pointerDown) return;
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const cell = el && typeof el.closest === "function" ? el.closest(".cell") : null;
+      if (!cell || !gridEl.contains(cell)) return;
+      addCellToSelection(Number(cell.dataset.row), Number(cell.dataset.col));
+    });
+
+    resetBtn.addEventListener("click", resetGame);
+    resetGame();
+  </script>
+</body>
+</html>
